@@ -246,6 +246,7 @@ def generate_human_output(
                             start=date["start"], end=date["end"]
                         )
                     )
+                
 
     if has_availabilities:
         out.insert(
@@ -289,6 +290,10 @@ def remove_comments(lines: list[str]) -> list[str]:
 def main(parks, json_output=False):
     excluded_site_ids = []
 
+    with open('token.txt') as f:
+        TOKEN - f.readline()
+        bot.run()
+
     if args.exclusion_file:
         with open(args.exclusion_file, "r") as f:
             excluded_site_ids = f.readlines()
@@ -317,7 +322,43 @@ def main(parks, json_output=False):
             args.end_date,
             args.show_campsite_info,
         )
+
     print(output)
+
+    def telegram_bot(has_availabilities, info_by_park_id):
+        import os
+        import telegram
+        import asyncio
+        import urllib3
+
+        
+
+        # Your chat ID
+        CHAT_ID = '797937840'
+        
+        # Make URL
+        message = ''
+        number_of_sites = 0
+        for park_id, park_info in info_by_park_id.items():
+            info_by_campsite_id = park_info[2]
+            for campsite_id, campsite_info in info_by_campsite_id.items():
+                message += '\n\n https://www.recreation.gov/camping/campsites/' + str(campsite_id) + '\n'
+                number_of_sites += 1
+
+        # Use proper English    
+        if number_of_sites == 1:
+            message = 'A campsite is available!' + message
+        elif number_of_sites > 1:
+            message = 'There are campsites available!' + message
+        else:
+            return
+
+        if has_availabilities:
+            bot = telegram.Bot(token=TOKEN)
+            asyncio.run(bot.send_message(chat_id=CHAT_ID, 
+                                         text=message))
+    telegram_bot(has_availabilities, info_by_park_id)
+
     return has_availabilities
 
 
